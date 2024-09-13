@@ -7,10 +7,10 @@ class Bird
 	{
 		this.width = 0.1;
 		this.height = 0.1;
-		this.birdBox = this.createBird();
 		this.xVelocity = xVelocity;
 		this.x = Math.random() * (2-this.width) - 1;
 		this.y = Math.random() * (1 - (-0.4-this.height)) + (-0.4); // ekki player area
+		this.birdBox = this.createBird();
 	}
 	
 	createBird()

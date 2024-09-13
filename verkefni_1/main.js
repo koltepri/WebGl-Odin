@@ -20,7 +20,6 @@ window.onload = function init()
     var canvas = document.getElementById("gl-canvas");
     gl = canvas.getContext('webgl2');
     if (!gl) alert( "WebGL 2.0 isn't available" );
-
     //  Configure WebGL
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor( 0.9, 0.9, 0.9, 1.0 );
@@ -29,14 +28,20 @@ window.onload = function init()
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
+	createMap();
+	createBirds();
+	allPositions = [mapPositions, birdPositions].flat(1);
+
+	var bufferId = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId );
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(allPositions), gl.DYNAMIC_DRAW);
+
 	locColor = gl.getUniformLocation(program,"rcolor");
 
     // Associate out shader variables with our data buffer
     positionLoc = gl.getAttribLocation(program, "vPosition");
+    gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(positionLoc);
-
-	createMap();
-	createBirds();
 
     render();
 };
@@ -69,25 +74,26 @@ function updateBirds()
 		birdPositions.push(bird.getBirdBox());
 	}
 	birdPositions = birdPositions.flat(2);
+	
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId );
+	gl.bufferSubData(gl.ARRAY_BUFFER, 12, flatten(birdPositions));
+
 }
 
 function updateAllPositions()
 {
-	updateBirds()
+	//updateBirds()
 
-	allPositions = [mapPositions, birdPositions].flat(1);
+	//allPositions = [mapPositions, birdPositions].flat(1);
 
     // Load the data into the GPU
-    var bufferId = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(allPositions), gl.STATIC_DRAW);
 
-    gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
 
 }
 
 function render() {
-	updateAllPositions();
+//	updateAllPositions();
+	//updateBirds()
 
     gl.clear( gl.COLOR_BUFFER_BIT );
 
