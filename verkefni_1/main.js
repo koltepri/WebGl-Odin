@@ -1,5 +1,6 @@
 import {createRect} from "./helpers.js"
 import {Bird} from "./Bird.js"
+import {Player} from "./Player.js"
 
 "use strict";
 
@@ -8,14 +9,20 @@ var locColor;
 var positionLoc;
 var bufferId;
 
+var player = new Player();
+
 var numberOfBirds = 3;
 var birds = [];
 
 var mapPositions = [];
 var birdPositions = [];
+var playerPositions = [];
 var allPositions = [];
 
 var speed = 30;
+
+var mouseX;
+var movement = false;
 
 
 window.onload = function init()
@@ -34,7 +41,7 @@ window.onload = function init()
 	createMap();
 	createBirds(numberOfBirds);
 	updateBirds();
-	allPositions = [mapPositions, birdPositions].flat(1);
+	allPositions = [mapPositions, playerPositions, birdPositions].flat(1);
 
 	bufferId = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, bufferId );
@@ -47,6 +54,27 @@ window.onload = function init()
     gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(positionLoc);
 
+	// Event listeners for mouse
+    canvas.addEventListener("mousedown", function(e){
+        movement = true;
+        mouseX = e.offsetX;
+    } );
+
+    canvas.addEventListener("mouseup", function(e){
+        movement = false;
+    } );
+
+    canvas.addEventListener("mousemove", function(e){
+        if(movement) {
+            var xmove = 2*(e.offsetX - mouseX)/canvas.width;
+            mouseX = e.offsetX;
+			player.movePlayerX(xmove);
+			playerPositions = player.getPosition();
+
+            gl.bufferSubData(gl.ARRAY_BUFFER, 24*4, flatten(playerPositions));
+        }
+    } );
+
     render();
 };
 
@@ -55,6 +83,9 @@ function createMap()
 	mapPositions.push(createRect(-1.0,1.0,1.0,0.8)); //birdArea
 	mapPositions.push(createRect(-1.0,-0.6,1.0,0.2)); //playerArea
 	mapPositions = mapPositions.flat(2);
+
+	// also create the player
+	playerPositions = player.getPosition();
 }
 
 function createBirds(birdsToCreate)
@@ -75,7 +106,6 @@ function updateBirds()
 		bird.updateBirdPosition();
 		if (bird.isOutOfBounds()) 
 		{
-			console.log("outOfBounds");
 			birds.splice(birds.indexOf(bird), 1);
 			createBirds(1);
 			birdPositions.push(bird.getBirdBox());
@@ -86,14 +116,10 @@ function updateBirds()
 	birdPositions = birdPositions.flat(2);
 	
     gl.bindBuffer(gl.ARRAY_BUFFER, bufferId );
-	gl.bufferSubData(gl.ARRAY_BUFFER, 24*4, flatten(birdPositions));
+	gl.bufferSubData(gl.ARRAY_BUFFER, 30*4, flatten(birdPositions));
 
 }
 
-function updateAllPositions()
-{
-
-}
 
 function render() {
 	updateBirds();
@@ -106,9 +132,12 @@ function render() {
 	gl.uniform4fv(locColor,flatten(vec4(0.588, 0.349, 0.031, 0.49)));
 	gl.drawArrays(gl.TRIANGLES, 6, 6);
 
+	gl.uniform4fv(locColor,flatten(vec4(1.0,0.0,0.0,1.0)));
+	gl.drawArrays(gl.TRIANGLES, 12, 3);
 
 	gl.uniform4fv(locColor,flatten(vec4(0.0,1.0,0.0,1.0)));
-	gl.drawArrays(gl.TRIANGLES, 12, birds.length*6)
+	gl.drawArrays(gl.TRIANGLES, 15, birds.length*6)
+
 
 	setTimeout(
         function () {requestAnimFrame( render );},

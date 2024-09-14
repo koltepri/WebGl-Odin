@@ -12,4 +12,13 @@ function createRect(x,y,w,h)
 	return [t1,t2]
 }
 
-export {createRect};
+function createTriangle(x,y,w,h)
+{
+	let p0 = vec2(x,y);
+	let p1 = vec2(x+w,y);
+	let p2 = vec2((w+x+x)/2,y+h);
+	console.log(p0,p1,p2);
+	return [p0,p1,p2];
+}
+
+export {createRect, createTriangle};
