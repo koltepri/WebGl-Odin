@@ -18,11 +18,25 @@ class Player
 		this.position = createTriangle(this.x,this.y,this.w,this.h);
 	}
 
-	getPosition()
-	{
-		return this.position;
-	}
-
 }
 
-export {Player}
+class Bullet 
+{
+	constructor(player)
+	{
+		this.x = (2*player.x+player.w)/2 - 0.02;
+		this.y = player.y+player.h;
+		this.w = 0.02;
+		this.h = 0.02;
+		this.position = createRect(this.x,this.y,this.w,this.h);
+		this.speed = 0.03;
+	}
+
+	updatePosition()
+	{
+		this.y = this.y + this.speed;
+		this.position = createRect(this.x,this.y,this.w,this.h);
+	}
+}
+
+export {Player,Bullet}

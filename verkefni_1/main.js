@@ -1,6 +1,6 @@
 import {createRect} from "./helpers.js"
 import {Bird} from "./Bird.js"
-import {Player} from "./Player.js"
+import {Player,Bullet} from "./Player.js"
 
 "use strict";
 
@@ -11,11 +11,15 @@ var bufferId;
 
 var player = new Player();
 
+var maxBullets = 100; // i need to define this for memory allocation
+var bullets = [];
+
 var numberOfBirds = 3;
 var birds = [];
 
 var mapPositions = [];
 var birdPositions = [];
+var bulletPositions = new Float32Array(maxBullets*12); // each rectangle is 12 points
 var playerPositions = [];
 var allPositions = [];
 
@@ -42,10 +46,11 @@ window.onload = function init()
 	createBirds(numberOfBirds);
 	updateBirds();
 	allPositions = [mapPositions, playerPositions, birdPositions].flat(1);
+	let bufferArray = new Float32Array([...flatten(allPositions), ...bulletPositions]);
 
 	bufferId = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, bufferId );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(allPositions), gl.DYNAMIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, bufferArray, gl.DYNAMIC_DRAW);
 
 	locColor = gl.getUniformLocation(program,"rcolor");
 
@@ -69,11 +74,23 @@ window.onload = function init()
             var xmove = 2*(e.offsetX - mouseX)/canvas.width;
             mouseX = e.offsetX;
 			player.movePlayerX(xmove);
-			playerPositions = player.getPosition();
+			playerPositions = player.position;
 
             gl.bufferSubData(gl.ARRAY_BUFFER, 24*4, flatten(playerPositions));
         }
     } );
+
+	// -- Event listener for keyboard
+    window.addEventListener("keydown", function(e){
+        if ( e.code == "Space" ) {
+			if (bullets.length < maxBullets)
+			{
+				let bullet = new Bullet(player)
+				bullets.push(bullet);
+			}
+			else console.log("you've run out of bullets");
+		}
+	});
 
     render();
 };
@@ -85,7 +102,7 @@ function createMap()
 	mapPositions = mapPositions.flat(2);
 
 	// also create the player
-	playerPositions = player.getPosition();
+	playerPositions = player.position;
 }
 
 function createBirds(birdsToCreate)
@@ -108,9 +125,9 @@ function updateBirds()
 		{
 			birds.splice(birds.indexOf(bird), 1);
 			createBirds(1);
-			birdPositions.push(bird.getBirdBox());
+			birdPositions.push(bird.birdBox);
 		}
-		else birdPositions.push(bird.getBirdBox());
+		else birdPositions.push(bird.birdBox);
 	}
 
 	birdPositions = birdPositions.flat(2);
@@ -120,9 +137,27 @@ function updateBirds()
 
 }
 
+function updateBullets()
+{
+	bulletPositions = [];
+	for(let bullet of bullets)
+	{
+		bullet.updatePosition();
+		
+
+		bulletPositions.push(bullet.position);
+	}
+
+	bulletPositions = bulletPositions.flat(2);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+	gl.bufferSubData(gl.ARRAY_BUFFER, birds.length*6*4*2+30*4, flatten(bulletPositions));
+}
+
+
 
 function render() {
 	updateBirds();
+	updateBullets();
 
     gl.clear( gl.COLOR_BUFFER_BIT );
 
@@ -136,7 +171,10 @@ function render() {
 	gl.drawArrays(gl.TRIANGLES, 12, 3);
 
 	gl.uniform4fv(locColor,flatten(vec4(0.0,1.0,0.0,1.0)));
-	gl.drawArrays(gl.TRIANGLES, 15, birds.length*6)
+	gl.drawArrays(gl.TRIANGLES, 15, birds.length*6);
+
+	gl.uniform4fv(locColor,flatten(vec4(0.5,0.5,0.5,1.0)));
+	gl.drawArrays(gl.TRIANGLES, 15+birds.length*6, bullets.length*6);
 
 
 	setTimeout(
