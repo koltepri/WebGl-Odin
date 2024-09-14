@@ -6,6 +6,7 @@ import {Bird} from "./Bird.js"
 var gl;
 var locColor;
 var positionLoc;
+var bufferId;
 
 var numberOfBirds = 3;
 var birds = [];
@@ -13,6 +14,8 @@ var birds = [];
 var mapPositions = [];
 var birdPositions = [];
 var allPositions = [];
+
+var speed = 30;
 
 
 window.onload = function init()
@@ -29,10 +32,11 @@ window.onload = function init()
     gl.useProgram(program);
 
 	createMap();
-	createBirds();
+	createBirds(numberOfBirds);
+	updateBirds();
 	allPositions = [mapPositions, birdPositions].flat(1);
 
-	var bufferId = gl.createBuffer();
+	bufferId = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, bufferId );
     gl.bufferData(gl.ARRAY_BUFFER, flatten(allPositions), gl.DYNAMIC_DRAW);
 
@@ -53,47 +57,46 @@ function createMap()
 	mapPositions = mapPositions.flat(2);
 }
 
-function createBirds()
+function createBirds(birdsToCreate)
 {
-	for(let i = 0; i < numberOfBirds; i++)
+	for(let i = 0; i < birdsToCreate; i++)
 	{
-		let xVelocity = Math.random() - 0.5;
+		let xVelocity = Math.random() * (0.03 - (-0.03)) + (-0.03);
 		let bird = new Bird(xVelocity);
 		birds.push(bird);
-		birdPositions.push(bird.getBirdBox());
 	}
-	birdPositions = birdPositions.flat(2);
 }
 
 function updateBirds()
 {
-	birdPositions = []; // reinitializing instead of updating feels wrong
+	birdPositions = []; 
 	for(let bird of birds)
 	{
 		bird.updateBirdPosition();
-		birdPositions.push(bird.getBirdBox());
+		if (bird.isOutOfBounds()) 
+		{
+			console.log("outOfBounds");
+			birds.splice(birds.indexOf(bird), 1);
+			createBirds(1);
+			birdPositions.push(bird.getBirdBox());
+		}
+		else birdPositions.push(bird.getBirdBox());
 	}
+
 	birdPositions = birdPositions.flat(2);
 	
     gl.bindBuffer(gl.ARRAY_BUFFER, bufferId );
-	gl.bufferSubData(gl.ARRAY_BUFFER, 12, flatten(birdPositions));
+	gl.bufferSubData(gl.ARRAY_BUFFER, 24*4, flatten(birdPositions));
 
 }
 
 function updateAllPositions()
 {
-	//updateBirds()
-
-	//allPositions = [mapPositions, birdPositions].flat(1);
-
-    // Load the data into the GPU
-
 
 }
 
 function render() {
-//	updateAllPositions();
-	//updateBirds()
+	updateBirds();
 
     gl.clear( gl.COLOR_BUFFER_BIT );
 
@@ -103,8 +106,12 @@ function render() {
 	gl.uniform4fv(locColor,flatten(vec4(0.588, 0.349, 0.031, 0.49)));
 	gl.drawArrays(gl.TRIANGLES, 6, 6);
 
-	gl.uniform4fv(locColor,flatten(vec4(0.0,1.0,0.0,1.0)));
-	gl.drawArrays(gl.TRIANGLES, 12, numberOfBirds*6)
 
-	window.requestAnimFrame(render);
+	gl.uniform4fv(locColor,flatten(vec4(0.0,1.0,0.0,1.0)));
+	gl.drawArrays(gl.TRIANGLES, 12, birds.length*6)
+
+	setTimeout(
+        function () {requestAnimFrame( render );},
+        speed
+    );
 }

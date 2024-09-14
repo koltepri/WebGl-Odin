@@ -25,8 +25,16 @@ class Bird
 
 	updateBirdPosition()
 	{
-		this.birdBox = createRect(this.x+this.xVelocity,this.y,this.width,this.height)
+    	this.x += this.xVelocity; 
+		this.birdBox = createRect(this.x,this.y,this.width,this.height);
+	}
+	isOutOfBounds() 
+	{
+		let boundsLeft = this.x+this.width < -1.0;
+		let boundsRight = this.x > 1.0;
+		return boundsLeft || boundsRight;
 	}
 }
 
 export { Bird };
+
