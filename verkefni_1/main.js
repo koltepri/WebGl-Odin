@@ -14,7 +14,7 @@ var player = new Player();
 var maxBullets = 100; // i need to define this for memory allocation
 var bullets = [];
 
-var numberOfBirds = 3;
+var numberOfBirds = 5;
 var birds = [];
 
 var mapPositions = [];
@@ -125,9 +125,8 @@ function updateBirds()
 		{
 			birds.splice(birds.indexOf(bird), 1);
 			createBirds(1);
-			birdPositions.push(bird.birdBox);
 		}
-		else birdPositions.push(bird.birdBox);
+		birdPositions.push(bird.birdBox);
 	}
 
 	birdPositions = birdPositions.flat(2);
@@ -143,8 +142,6 @@ function updateBullets()
 	for(let bullet of bullets)
 	{
 		bullet.updatePosition();
-		
-
 		bulletPositions.push(bullet.position);
 	}
 
@@ -153,11 +150,41 @@ function updateBullets()
 	gl.bufferSubData(gl.ARRAY_BUFFER, birds.length*6*4*2+30*4, flatten(bulletPositions));
 }
 
+function collisionHandler()
+{
+	for (let bullet of bullets)
+	{
+		for (let bird of birds)
+		{
+			if (detectCollision(bullet,bird))
+			{
+				birds.splice(birds.indexOf(bird), 1);
+				createBirds(1);
+
+				bullets.splice(bullets.indexOf(bullet),1);
+				console.log("bird hit");
+			}
+		}
+	}
+}
+function detectCollision(gunshot, bird)
+{
+	let collisionX = gunshot.x > bird.x && gunshot.x < bird.x + bird.width;
+	let collisionY = gunshot.y > bird.y - bird.height && gunshot.y > bird.y;
+    if (collisionX && collisionY) {
+        return true;
+    }
+
+    return false;
+
+}
+
 
 
 function render() {
 	updateBirds();
 	updateBullets();
+	collisionHandler();
 
     gl.clear( gl.COLOR_BUFFER_BIT );
 
