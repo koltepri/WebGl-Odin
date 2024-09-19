@@ -6,22 +6,29 @@
 
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute vec4 vPosition;
+uniform mat4 tMatrix;
+uniform float vScaling;
 
 void
 main()
 {
 	gl_PointSize = 1.0;
-  gl_Position = vPosition;
+	gl_Position.x = vPosition.x * vScaling;
+	gl_Position.y = vPosition.y * vScaling;
+	gl_Position.z = 0.0;
+	gl_Position.w = 1.0;
+	gl_Position = tMatrix * gl_Position;
 }
 </script>
 
 <script id="fragment-shader" type="x-shader/x-fragment">
 precision mediump float;
+uniform vec4 rcolor;
 
 void
 main()
 {
-    gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );
+    gl_FragColor = rcolor;
 }
 </script>
 

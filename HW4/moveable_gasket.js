@@ -5,6 +5,23 @@ var points;
 
 var NumPoints = 5000;
 
+var rand = Math.random; // maybe not syntactically allowed
+
+var locColor; 
+var color = flatten(vec4(1.0,0.0,0.0,1.0))
+
+var locScaling;
+var scaling = 1.0;
+
+var mouseX;
+var mouseY;
+var movement = false;
+
+var tMatrixLoc;
+var tMatrix = translate(0,0,0); // identity matrix
+
+
+
 window.onload = function init()
 {
     var canvas = document.getElementById( "gl-canvas" );
@@ -54,11 +71,60 @@ window.onload = function init()
     gl.vertexAttribPointer( vPosition, 2, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
 
+	// ---
+	locColor = gl.getUniformLocation(program,"rcolor");
+
+	window.addEventListener("keydown", function(e){
+        if ( e.code == "Space" ) {
+			color = flatten(vec4(rand(),rand(),rand(),1.0));
+		}
+	} );
+
+
+	locScaling = gl.getUniformLocation(program,"vScaling");
+	gl.uniform1f(locScaling, scaling);
+
+	canvas.addEventListener("wheel", function(e){
+		scaling = scaling + (e.deltaY/-114)*0.1;
+		gl.uniform1f(locScaling, scaling);
+    } );
+	
+	tMatrixLoc = gl.getUniformLocation(program,"tMatrix");
+	gl.uniformMatrix4fv(tMatrixLoc, false, flatten(tMatrix));
+	// Event listeners for mouse
+    canvas.addEventListener("mousedown", function(e){
+        movement = true;
+        mouseX = e.offsetX;
+		mouseY = e.offsetY;
+    } );
+
+    canvas.addEventListener("mouseup", function(e){
+        movement = false;
+    } );
+
+    canvas.addEventListener("mousemove", function(e){
+        if(movement) {
+			let dx = 2 * (e.offsetX - mouseX) / canvas.width;
+    		let dy = 2*(canvas.height-e.offsetY - mouseY)/canvas.height-1;
+			mouseX = e.offsetX;
+			mouseY = e.offsetY;
+			console.log(dx,dy)
+
+			tMatrix = translate(dx,dy,0);
+			gl.uniformMatrix4fv(tMatrixLoc, false,flatten(tMatrix));
+		}
+    } );
+
+
     render();
 };
 
 
 function render() {
     gl.clear( gl.COLOR_BUFFER_BIT );
+	gl.uniform4fv(locColor,color);
     gl.drawArrays( gl.POINTS, 0, points.length );
+
+	window.requestAnimFrame(render);
 }
+
