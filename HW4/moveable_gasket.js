@@ -117,7 +117,7 @@ window.onload = function init()
 
 			console.log(totalX,dy)
 
-			tMatrix = translate(totalX,totalY,0);
+			tMatrix = translate(totalX,dy,0);
 			gl.uniformMatrix4fv(tMatrixLoc, false, flatten(tMatrix));
 		}
     } );
