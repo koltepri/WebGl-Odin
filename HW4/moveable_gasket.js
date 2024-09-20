@@ -15,6 +15,8 @@ var scaling = 1.0;
 
 var mouseX;
 var mouseY;
+var totalX = 0;
+var totalY = 0;
 var movement = false;
 
 var tMatrixLoc;
@@ -103,15 +105,20 @@ window.onload = function init()
     } );
 
     canvas.addEventListener("mousemove", function(e){
-        if(movement) {
+        if(movement) { // skritid
 			let dx = 2 * (e.offsetX - mouseX) / canvas.width;
-    		let dy = 2*(canvas.height-e.offsetY - mouseY)/canvas.height-1;
+        	let dy = 2 * (canvas.height - e.offsetY - mouseY) / canvas.height - 1;
+
+			totalX += dx;
+			totalY += dy;
+
 			mouseX = e.offsetX;
 			mouseY = e.offsetY;
-			console.log(dx,dy)
 
-			tMatrix = translate(dx,dy,0);
-			gl.uniformMatrix4fv(tMatrixLoc, false,flatten(tMatrix));
+			console.log(totalX,dy)
+
+			tMatrix = translate(totalX,totalY,0);
+			gl.uniformMatrix4fv(tMatrixLoc, false, flatten(tMatrix));
 		}
     } );
 
