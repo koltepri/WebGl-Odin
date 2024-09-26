@@ -143,9 +143,9 @@ function render()
 {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	rotHour += (1/86400)*20000;
-	rotMin += (1/3600)*speed*20;
-	rotSec += (1/60)*speed;
+	rotHour -= (1/86400)*speed;
+	rotMin += (1/3600)*speed;
+	rotSec -= (1/60)*speed;
 	let rotations = [rotHour,rotMin,rotSec]
 
     var mv = mat4();
