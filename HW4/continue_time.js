@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////
 //    Sýnidæmi í Tölvugrafík
-//     Búum til bókstafinn H úr þremur teningum
+//     Jörðin (sem teningur!) snýst um sólina (stærri teningur!)
 //
 //    Hjálmtýr Hafsteinsson, september 2024
 /////////////////////////////////////////////////////////////////
@@ -18,20 +18,27 @@ var spinY = 0;
 var origX;
 var origY;
 
+var rotHour = 0.0;
+var rotMin = 0.0;
+var rotSec = 0.0;
+
+var speed = 200;
+
 var matrixLoc;
+
 
 window.onload = function init()
 {
     canvas = document.getElementById( "gl-canvas" );
-    
+
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
     colorCube();
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
-    gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
-    
+    gl.clearColor( 0.9, 1.0, 1.0, 1.0 );
+
     gl.enable(gl.DEPTH_TEST);
 
     //
@@ -39,7 +46,7 @@ window.onload = function init()
     //
     var program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
-    
+
     var cBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW );
@@ -56,7 +63,7 @@ window.onload = function init()
     gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
 
-    matrixLoc = gl.getUniformLocation( program, "transform" );
+    matrixLoc = gl.getUniformLocation( program, "rotation" );
 
     //event listeners for mouse
     canvas.addEventListener("mousedown", function(e){
@@ -78,7 +85,7 @@ window.onload = function init()
             origY = e.offsetY;
         }
     } );
-    
+
     render();
 }
 
@@ -116,7 +123,12 @@ function quad(a, b, c, d)
         [ 1.0, 1.0, 1.0, 1.0 ]   // white
     ];
 
+    // We need to parition the quad into two triangles in order for
+    // WebGL to be able to render it.  In this case, we create two
+    // triangles from the quad indices
+    
     //vertex color assigned by the index of the vertex
+    
     var indices = [ a, b, c, a, c, d ];
 
     for ( var i = 0; i < indices.length; ++i ) {
@@ -131,35 +143,32 @@ function render()
 {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+	rotHour += (1/86400)*20000;
+	rotMin += (1/3600)*speed*20;
+	rotSec += (1/60)*speed;
+	let rotations = [rotHour,rotMin,rotSec]
+
     var mv = mat4();
     mv = mult( mv, rotateX(spinX) );
-    mv = mult( mv, rotateY(spinY) ) ;
+    mv = mult( mv, rotateY(spinY) );
 
-	for (let i = 0; i < 4; i++) {
-		let y = i/4;
-		mv1 = mult(mv, translate(0.0,-0.3+y,0.0));
-    	mv1 = mult(mv1, scalem( 1.0, 0.1, 0.3 ) );
-    	gl.uniformMatrix4fv(matrixLoc, false, flatten(mv1));
+	var initialSize = 0.5;
+	
+	for (let i = 0; i < 3; i++) {
+		//let iterSize = initialSize * Math.pow(0.8,i);
+		iterSize = 0.5
+			
+		mv = mult(mv, translate(0.0, iterSize/1.5, 0.0));
+		mv = mult(mv, rotateZ(rotations[i]))
+		mv = mult(mv, scalem(0.1, iterSize, 0.1));
+		mv = mult(mv, translate(0.0, -iterSize/1.5, 0.0));
+
+    	gl.uniformMatrix4fv(matrixLoc, false, flatten(mv));
     	gl.drawArrays( gl.TRIANGLES, 0, numVertices );
+		mv = mult(mv, scalem(1/0.1, -1/iterSize, 1/0.1));
 	}
-
-    // First the right leg
-    mv1 = mult( mv, translate( -0.5, 0.0, 0.0 ) );
-    mv1 = mult( mv1, scalem( 0.1, 1.0, 0.3 ) );
-    gl.uniformMatrix4fv(matrixLoc, false, flatten(mv1));
-    gl.drawArrays( gl.TRIANGLES, 0, numVertices );
-
-    // Then the left leg
-    mv1 = mult( mv, translate( 0.5, 0.0, 0.0 ) );
-    mv1 = mult( mv1, scalem( 0.1, 1.0, 0.3 ) );
-    gl.uniformMatrix4fv(matrixLoc, false, flatten(mv1));
-    gl.drawArrays( gl.TRIANGLES, 0, numVertices );
-
-	// Backboard
-	mv1 = mult(mv, translate(0.0,0.0,0.14));
-	mv1 = mult(mv1, scalem(1.0,1.0,0.01));
-    gl.uniformMatrix4fv(matrixLoc, false, flatten(mv1));
-    gl.drawArrays( gl.TRIANGLES, 0, numVertices );
-
-    requestAnimFrame( render );
+		
+	setTimeout(
+        function () {requestAnimFrame( render );},0.1
+    );
 }
