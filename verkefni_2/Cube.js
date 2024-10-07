@@ -1,21 +1,23 @@
 
-
+var cubeSize;
 
 class Cube
 {
-	constructor(gridPosition, color, transform, size)
+	constructor(gridPosition, color, size)
 	{
+		cubeSize = size;
+
 		// vec3(x,y,z)
 		this.gridPosition = gridPosition; 
 
 		// vec4(r,g,b,o)
 		this.color = color; 		
 
-		// ??
-		this.vertices = colorCube(size);
+		this.vertices = colorCube();
 
-		// mat4 ???
-		this.transform = transform;
+		// mat4 
+		this.transform = mat4(); 
+
 
 	}
 	
@@ -45,22 +47,24 @@ function colorCube()
 	return allPoints;
 }
 
-function quad(size) 
+function quad(a,b,c,d) 
 {
 	var points = [];
     var vertices = [
-        vec3( -size, -size,  size ),
-        vec3( -size,  size,  size ),
-        vec3(  size,  size,  size ),
-        vec3(  size, -size,  size ),
-        vec3( -size, -size, -size ),
-        vec3( -size,  size, -size ),
-        vec3(  size,  size, -size ),
-        vec3(  size, -size, -size )
+        vec3( -cubeSize, -cubeSize,  cubeSize ),
+        vec3( -cubeSize,  cubeSize,  cubeSize ),
+        vec3(  cubeSize,  cubeSize,  cubeSize ),
+        vec3(  cubeSize, -cubeSize,  cubeSize ),
+        vec3( -cubeSize, -cubeSize, -cubeSize ),
+        vec3( -cubeSize,  cubeSize, -cubeSize ),
+        vec3(  cubeSize,  cubeSize, -cubeSize ),
+        vec3(  cubeSize, -cubeSize, -cubeSize )
     ];
 
-    for ( var i = 0; i < indices.length; ++i ) {
-        points.push( vertices[indices[i]] );
+	var indices = [ a, b, c, a, c, d ];
+
+    for ( var i = 0; i < 6; ++i ) {
+        points.push( vertices[indices[i]] ); // why do we have 36 points instead of 24
     }
 	return points;
 }
