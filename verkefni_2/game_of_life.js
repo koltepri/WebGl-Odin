@@ -1,5 +1,5 @@
 import {Cube} from "./Cube.js"
-import {createMap,loadCubes} from "./createMap.js"
+import {createGrid,loadCubes} from "./createMap.js"
 
 var canvas;
 var gl;
@@ -7,7 +7,6 @@ var gl;
 var numVertices = 36;
 
 var points = [];
-var colors = [];
 
 var movement = false;     // Do we rotate?
 var spinX = 0;
@@ -16,6 +15,7 @@ var origX;
 var origY;
 
 var matrixLoc;
+var colorLoc;
 
 var cubes; 
 
@@ -40,7 +40,7 @@ window.onload = function init()
     var program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
 
-	cubes = createMap(n);
+	cubes = createGrid(n);
 	let cubeData = loadCubes(cubes);
 	points = cubeData[0];
 	colors = cubeData[1];
@@ -50,15 +50,12 @@ window.onload = function init()
 	gl.bufferData(gl.ARRAY_BUFFER, flatten(...points, ...colors), gl.DYNAMIC_DRAW);
 
     var vPosition = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 3*numVertices, 0 );
+    gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
-
-    var vColor = gl.getAttribLocation( program, "vColor" );
-    gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 3*numVertices, 4*4 );
-    gl.enableVertexAttribArray( vColor );
 
 
     matrixLoc = gl.getUniformLocation( program, "transform" );
+    colorLoc = gl.getUniformLocation( program, "vColor" );
 
     //event listeners for mouse
     canvas.addEventListener("mousedown", function(e){
