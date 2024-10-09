@@ -1,5 +1,4 @@
-import {Cube} from "./Cube.js"
-import {createGrid,loadCubes} from "./createMap.js"
+import {createGrid, getCubePoints } from "./createMap.js"
 
 var canvas;
 var gl;
@@ -20,6 +19,7 @@ var colorLoc;
 var cubes; 
 
 var n = 2;
+var cubeSize = 1/n; // the side length of each cube, 2 fills up the entire canvas
 
 window.onload = function init()
 {
@@ -41,18 +41,15 @@ window.onload = function init()
     gl.useProgram( program );
 
 	cubes = createGrid(n);
-	let cubeData = loadCubes(cubes);
-	points = cubeData[0];
-	colors = cubeData[1];
+	points = getCubePoints(cubeSize);
 
     var vBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
-	gl.bufferData(gl.ARRAY_BUFFER, flatten(...points, ...colors), gl.DYNAMIC_DRAW);
+	gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.DYNAMIC_DRAW);
 
     var vPosition = gl.getAttribLocation( program, "vPosition" );
     gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
-
 
     matrixLoc = gl.getUniformLocation( program, "transform" );
     colorLoc = gl.getUniformLocation( program, "vColor" );
@@ -91,11 +88,12 @@ function render()
     var mv = mat4();
     mv = mult( mv, rotateX(spinX) );
     mv = mult( mv, rotateY(spinY) );
-	for (var i = 0; i < cubes.length; i+=numVertices)
+	for (var i = 0; i < cubes.length; i++)
 	{
-		mv = mult(mv, cubes[i].transform)	
-		gl.uniformMatrix4fv(matrixLoc, false, flatten(mv));
-		gl.drawArrays(gl.TRIANGLES, i, numVertices);
+		let m = mult(mv, cubes[i].transform)	
+		gl.uniform4fv(colorLoc, flatten(cubes[i].color))
+		gl.uniformMatrix4fv(matrixLoc, false, flatten(m));
+		gl.drawArrays(gl.TRIANGLES, 0, numVertices);
 	}
 
     requestAnimFrame( render );
