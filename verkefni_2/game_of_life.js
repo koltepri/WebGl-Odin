@@ -8,17 +8,19 @@ var numVertices = 36;
 var points = [];
 
 var movement = false;     // Do we rotate?
-var spinX = 0;
-var spinY = 0;
+var spinX = 45;
+var spinY = 45;
 var origX;
 var origY;
+var zoom = 0.5;
+const zoomSpeed = 0.1;
 
 var matrixLoc;
 var colorLoc;
 
 var cubes; 
 
-var n = 2;
+var n = 3;
 var cubeSize = 1/n; // the side length of each cube, 2 fills up the entire canvas
 
 window.onload = function init()
@@ -29,7 +31,7 @@ window.onload = function init()
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
-    gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
+    gl.clearColor( 0.7, 0.7, 0.7, 1.0 );
     
     gl.enable(gl.DEPTH_TEST);
 	
@@ -74,7 +76,21 @@ window.onload = function init()
             origY = e.offsetY;
         }
     } );
-    
+
+   canvas.addEventListener("wheel", function(e){
+    // Zoom in when scrolling up, zoom out when scrolling down
+    if (e.deltaY < 0) {
+        zoom += zoomSpeed;
+    } else {
+        zoom -= zoomSpeed;
+    }
+
+    // Limit zoom levels 
+    zoom = Math.max(0.1, Math.min(zoom, 10)); 
+
+    e.preventDefault(); // Prevent default scroll behavior
+	});
+
     render();
 }
 
@@ -88,6 +104,7 @@ function render()
     var mv = mat4();
     mv = mult( mv, rotateX(spinX) );
     mv = mult( mv, rotateY(spinY) );
+	mv = mult(mv, scalem(zoom,zoom,zoom));
 	for (var i = 0; i < cubes.length; i++)
 	{
 		let m = mult(mv, cubes[i].transform)	

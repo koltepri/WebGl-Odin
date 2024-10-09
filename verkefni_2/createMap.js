@@ -2,12 +2,13 @@ import {Cube} from "./Cube.js"
 
 var N; // NxNxN grid
 var cubeSize;
+var cubePadding;
 
 function createGrid(n)
 { // technically creates all the cubes
 	N = n;
 	var cubes = [];
-	let percentSpawn = 0.2; // 20%
+	let percentSpawn = 1.0; // 20%
 	let defaultColor = vec4(1.0,0.0,0.0,1.0); //red 
 	for (var x = 0; x < n; x++) 
 	{
@@ -29,8 +30,9 @@ function createGrid(n)
 }
 
 function getCubePoints(size)
-{
+{ // only called once i think
 	cubeSize = size;
+	cubePadding = cubeSize / 10;
 	var allPoints = [];
     allPoints.push( quad( 1, 0, 3, 2 ) );
     allPoints.push( quad( 2, 3, 7, 6 ) );
@@ -44,15 +46,16 @@ function getCubePoints(size)
 function quad(a,b,c,d) 
 {
 	var points = [];
+	let boxSize = cubeSize - cubePadding;
     var vertices = [
-        vec3( -cubeSize, -cubeSize,  cubeSize ),
-        vec3( -cubeSize,  cubeSize,  cubeSize ),
-        vec3(  cubeSize,  cubeSize,  cubeSize ),
-        vec3(  cubeSize, -cubeSize,  cubeSize ),
-        vec3( -cubeSize, -cubeSize, -cubeSize ),
-        vec3( -cubeSize,  cubeSize, -cubeSize ),
-        vec3(  cubeSize,  cubeSize, -cubeSize ),
-        vec3(  cubeSize, -cubeSize, -cubeSize )
+        vec3( -boxSize, -boxSize,  boxSize ),
+        vec3( -boxSize,  boxSize,  boxSize ),
+        vec3(  boxSize,  boxSize,  boxSize ),
+        vec3(  boxSize, -boxSize,  boxSize ),
+        vec3( -boxSize, -boxSize, -boxSize ),
+        vec3( -boxSize,  boxSize, -boxSize ),
+        vec3(  boxSize,  boxSize, -boxSize ),
+        vec3(  boxSize, -boxSize, -boxSize )
     ];
 
 	var indices = [ a, b, c, a, c, d ];
