@@ -26,13 +26,14 @@ var cubeSize = 1/n; // the side length of each cube, 2 fills up the entire canva
 // frames and game speed, there should be a more concise way to do this.
 var then = 0;
 var frame = 0;
-var iteration = 0;
+var iterationCount = 0;
+
 const framePerSec = 60;
 const iterationsPerSec = 0.35;
+const framesPerIteration = Math.round(framePerSec / iterationsPerSec);
+
 const frameInterval = 1 / framePerSec;  // Interval for X (in seconds)
-const iterationInterval= 1 / iterationsPerSec;  // Interval for Y (in seconds) 
-//const ds = (1 + iterationsPerSec) / (framePerSec / iterationsPerSec); // this should be a 
-const ds = 1 / (framePerSec / iterationsPerSec);
+const ds = 1 / framesPerIteration;
 
 window.onload = function init()
 {
@@ -115,15 +116,12 @@ function render(now)
 	const deltaTime = now - then;
     then = now;
 
-    // Update based on time
     frame += deltaTime;
-    iteration += deltaTime;
-
 
 	if (frame >= frameInterval) {
 		frame = 0;
-		if (iteration >= iterationInterval) {
-			iteration = 0;
+		iterationCount++;
+		if (iterationCount % framesPerIteration == 0) {
 			iterationLogic();
 		}
     	gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -177,5 +175,5 @@ function iterationLogic()
             }
         }
 	}
-	console.log(cubeAliveCount)
+	console.log("Iteration nr : " + iterationCount/framesPerIteration + ", cubes alive : " + cubeAliveCount);
 }
