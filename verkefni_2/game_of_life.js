@@ -1,4 +1,4 @@
-import {createGrid, getCubePoints } from "./createMap.js"
+import {createGrid, getCubePoints, howManyNeighbors, countToColor} from "./createMap.js"
 
 var canvas;
 var gl;
@@ -20,8 +20,19 @@ var colorLoc;
 
 var cubes; 
 
-var n = 3;
+var n = 10;
 var cubeSize = 1/n; // the side length of each cube, 2 fills up the entire canvas
+
+// frames and game speed, there should be a more concise way to do this.
+var then = 0;
+var frame = 0;
+var iteration = 0;
+const framePerSec = 60;
+const iterationsPerSec = 0.35;
+const frameInterval = 1 / framePerSec;  // Interval for X (in seconds)
+const iterationInterval= 1 / iterationsPerSec;  // Interval for Y (in seconds) 
+//const ds = (1 + iterationsPerSec) / (framePerSec / iterationsPerSec); // this should be a 
+const ds = 1 / (framePerSec / iterationsPerSec);
 
 window.onload = function init()
 {
@@ -44,6 +55,7 @@ window.onload = function init()
 
 	cubes = createGrid(n);
 	points = getCubePoints(cubeSize);
+	iterationLogic();
 
     var vBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
@@ -91,28 +103,79 @@ window.onload = function init()
     e.preventDefault(); // Prevent default scroll behavior
 	});
 
-    render();
+    render(0.0);
 }
 
 
 
 
-function render()
+function render(now)
 {
-    gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	now *= 0.001;  // Convert milliseconds to seconds
+	const deltaTime = now - then;
+    then = now;
 
-    var mv = mat4();
-    mv = mult( mv, rotateX(spinX) );
-    mv = mult( mv, rotateY(spinY) );
-	mv = mult(mv, scalem(zoom,zoom,zoom));
-	for (var i = 0; i < cubes.length; i++)
-	{
-		let m = mult(mv, cubes[i].transform)	
-		gl.uniform4fv(colorLoc, flatten(cubes[i].color))
-		gl.uniformMatrix4fv(matrixLoc, false, flatten(m));
-		gl.drawArrays(gl.TRIANGLES, 0, numVertices);
+    // Update based on time
+    frame += deltaTime;
+    iteration += deltaTime;
+
+
+	if (frame >= frameInterval) {
+		frame = 0;
+		if (iteration >= iterationInterval) {
+			iteration = 0;
+			iterationLogic();
+		}
+    	gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    	var mv = mat4();
+    	mv = mult( mv, rotateX(spinX) );
+    	mv = mult( mv, rotateY(spinY) );
+		mv = mult(mv, scalem(zoom,zoom,zoom));
+
+
+		for (var i = 0; i < cubes.length; i++)
+		{
+			cubes[i].changeCubeSize(ds);
+			let m = mult(mv, cubes[i].getTransformM());
+			gl.uniform4fv(colorLoc, flatten(cubes[i].color));
+			gl.uniformMatrix4fv(matrixLoc, false, flatten(m));
+			gl.drawArrays(gl.TRIANGLES, 0, numVertices);
+		}
+
+    	requestAnimFrame( render );
+
 	}
-
+	
     requestAnimFrame( render );
 }
 
+function iterationLogic() 
+{
+	var cubeAliveCount = 0;
+	for (var i = 0; i < cubes.length; i++) 
+	{
+		let cube = cubes[i];
+		let neighbors = howManyNeighbors(cube, cubes);
+		cube.currentNeighbors = neighbors;
+		cube.color = countToColor(neighbors);
+	}
+
+	for (var i = 0; i < cubes.length; i++)
+	{
+		let cube = cubes[i];
+		let neighbors = cube.currentNeighbors;
+	    if (cube.isAlive) {
+			cubeAliveCount += 1;
+            if (neighbors != 5 && neighbors != 6 && neighbors != 7)
+			{
+                cube.isAlive = false; 
+			}
+        } else {
+            if (neighbors == 6) {
+                cube.isAlive = true;
+            }
+        }
+	}
+	console.log(cubeAliveCount)
+}
